@@ -80,6 +80,14 @@ public class Lexer {
 
             case ' ', '\r', '\t' -> {}
             case '\n' -> line++;
+
+            case '"' -> string();
+
+            case char d when isDigit(d) -> number();
+            case char a when isAlpha(a) -> identifier();
+            default -> {
+                // TODO: add error about unexpected character
+            }
         }
     }
 
@@ -118,10 +126,71 @@ public class Lexer {
         return source.charAt(current);
     }
 
+    private char peekNext() {
+        if (current + 1 >= source.length()) {
+            return '\0';
+        }
+        return source.charAt(current + 1);
+    }
+
     private void comment() {
         while (peek() != '\n' && !isAtEnd()) {
             consume();
         }
+    }
+
+    private void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') {
+                line++;
+            }
+            consume();
+        }
+
+        // TODO: add error about unterminated string
+
+        consume();
+
+        String value = source.substring(start + 1, current - 1);
+        addToken(STRING, value);
+    }
+
+    private void number() {
+        while (isDigit(peek())) {
+            consume();
+        }
+
+        if (peek() == '.' && isDigit(peekNext())) {
+            consume();
+            while (isDigit(peek())) {
+                consume();
+            }
+        }
+
+        Double value = Double.valueOf(source.substring(start, current));
+        addToken(NUMBER, value);
+    }
+
+    private void identifier() {
+        while (isAlphaNumeric(peek())) {
+            consume();
+        }
+
+        String text = source.substring(start, current);
+        TokenType type = keywords.getOrDefault(text, IDENTIFIER);
+        addToken(type);
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
     }
 
     private boolean isAtEnd() {
