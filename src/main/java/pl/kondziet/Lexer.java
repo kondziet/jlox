@@ -42,8 +42,6 @@ public class Lexer {
 
     List<Token> scanTokens() {
         while (!isAtEnd()) {
-            // TODO: place start, current pointer assignment at the beginning of scanToken()
-            start = current;
             scanToken();
         }
         tokens.add(new Token(EOF, "", null, line));
@@ -52,6 +50,7 @@ public class Lexer {
     }
 
     private void scanToken() {
+        start = current;
         char c = consume();
 
         switch (c) {
