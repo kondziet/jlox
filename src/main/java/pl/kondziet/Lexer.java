@@ -64,6 +64,11 @@ public class Lexer {
             case '+' -> addToken(PLUS);
             case ';' -> addToken(SEMICOLON);
             case '*' -> addToken(STAR);
+
+            case '!' -> addToken(consumeIfMatches('=') ? BANG_EQUAL : BANG);
+            case '=' -> addToken(consumeIfMatches('=') ? EQUAL_EQUAL : EQUAL);
+            case '<' -> addToken(consumeIfMatches('=') ? LESS_EQUAL : LESS);
+            case '>' -> addToken(consumeIfMatches('=') ? GREATER_EQUAL : GREATER);
         }
     }
 
@@ -78,6 +83,18 @@ public class Lexer {
 
     private char consume() {
         return source.charAt(current++);
+    }
+
+    private boolean consumeIfMatches(char expected) {
+        if (isAtEnd()) {
+            return false;
+        }
+        if (source.charAt(current) != expected) {
+            return false;
+        }
+
+        consume();
+        return true;
     }
 
     private boolean isAtEnd() {
