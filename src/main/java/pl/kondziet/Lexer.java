@@ -69,6 +69,17 @@ public class Lexer {
             case '=' -> addToken(consumeIfMatches('=') ? EQUAL_EQUAL : EQUAL);
             case '<' -> addToken(consumeIfMatches('=') ? LESS_EQUAL : LESS);
             case '>' -> addToken(consumeIfMatches('=') ? GREATER_EQUAL : GREATER);
+
+            case '/' -> {
+                if (consumeIfMatches('/')) {
+                    comment();
+                } else {
+                    addToken(SLASH);
+                }
+            }
+
+            case ' ', '\r', '\t' -> {}
+            case '\n' -> line++;
         }
     }
 
@@ -82,6 +93,9 @@ public class Lexer {
     }
 
     private char consume() {
+        if (isAtEnd()) {
+            return '\0';
+        }
         return source.charAt(current++);
     }
 
@@ -95,6 +109,19 @@ public class Lexer {
 
         consume();
         return true;
+    }
+
+    private char peek() {
+        if (isAtEnd()) {
+            return '\0';
+        }
+        return source.charAt(current);
+    }
+
+    private void comment() {
+        while (peek() != '\n' && !isAtEnd()) {
+            consume();
+        }
     }
 
     private boolean isAtEnd() {
