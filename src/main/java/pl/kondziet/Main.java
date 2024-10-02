@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 public class Main {
 
+    private static boolean hadError = false;
+
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: jlox [script]");
@@ -45,5 +47,23 @@ public class Main {
 
         Parser parser = new Parser(tokens);
         Expression expression = parser.parse();
+    }
+
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    static void error(Token token, String message) {
+        if (token.type() == TokenType.EOF) {
+            report(token.line(), "end", message);
+        } else {
+            report(token.line(), token.lexeme(), message);
+        }
+    }
+
+    private static void report(int line, String where, String message) {
+        where = where.isBlank() ? "" : " at '%s'".formatted(where);
+        System.err.printf("[line %d] error%s: %s\n", line, where, message);
+        hadError = true;
     }
 }
