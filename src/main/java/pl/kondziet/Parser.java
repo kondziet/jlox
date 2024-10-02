@@ -2,8 +2,8 @@ package pl.kondziet;
 
 import java.util.List;
 
-import static pl.kondziet.TokenType.*;
 import static pl.kondziet.Expression.*;
+import static pl.kondziet.TokenType.*;
 
 public class Parser {
 
@@ -22,7 +22,7 @@ public class Parser {
         return equality();
     }
 
-    private  Expression equality() {
+    private Expression equality() {
         Expression left = comparison();
 
         while (consumeIfAnyMatches(BANG_EQUAL, EQUAL_EQUAL)) {
@@ -83,7 +83,6 @@ public class Parser {
     }
 
     private Expression primary() {
-        // TODO: may be faster to use switch, and after correct match consume token
         if (consumeIfAnyMatches(FALSE)) {
             return new Literal(false);
         }
