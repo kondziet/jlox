@@ -139,4 +139,20 @@ public class Parser {
     private boolean isAtEnd() {
         return peek().type() == EOF;
     }
+
+    private void synchronize() {
+        consume();
+
+        while (!isAtEnd()) {
+            if (previous().type() == SEMICOLON) return;
+
+            switch (peek().type()) {
+                case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN -> {
+                    return;
+                }
+            }
+
+            consume();
+        }
+    }
 }
