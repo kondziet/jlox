@@ -64,6 +64,8 @@ public class Main {
         interpreter.interpret(expression);
     }
 
+    // TODO: think about extracting this error handling related logic to separate class
+
     static void error(int line, String message) {
         report(line, "", message);
     }
