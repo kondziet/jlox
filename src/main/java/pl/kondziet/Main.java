@@ -9,6 +9,10 @@ import java.util.Scanner;
 
 public class Main {
 
+    private static final Interpreter interpreter = new Interpreter();
+    private static boolean hadError = false;
+    private static boolean hadRuntimeError = false;
+
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: jlox [script]");
@@ -24,6 +28,13 @@ public class Main {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         String source = new String(bytes, Charset.defaultCharset());
         run(source);
+
+        if (hadError) {
+            System.exit(65);
+        }
+        if (hadRuntimeError) {
+            System.exit(70);
+        }
     }
 
     private static void runPrompt() {
@@ -46,7 +57,33 @@ public class Main {
         Parser parser = new Parser(tokens);
         Expression expression = parser.parse();
 
-        Interpreter interpreter = new Interpreter();
+        if (hadError) {
+            return;
+        }
+
         interpreter.interpret(expression);
+    }
+
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    static void error(Token token, String message) {
+        if (token.type() == TokenType.EOF) {
+            report(token.line(), "end", message);
+        } else {
+            report(token.line(), token.lexeme(), message);
+        }
+    }
+
+    static void runtimeError(ExecutionException exception) {
+        System.err.printf("%s\n[line %d]\n", exception.getMessage(), exception.getToken().line());
+        hadRuntimeError = true;
+    }
+
+    private static void report(int line, String where, String message) {
+        where = where.isBlank() ? "" : " at '%s'".formatted(where);
+        System.err.printf("[line %d] error%s: %s\n", line, where, message);
+        hadError = true;
     }
 }

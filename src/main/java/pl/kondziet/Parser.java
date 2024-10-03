@@ -4,6 +4,7 @@ import java.util.List;
 
 import static pl.kondziet.Expression.*;
 import static pl.kondziet.TokenType.*;
+import static pl.kondziet.Main.error;
 
 public class Parser {
 
@@ -15,7 +16,11 @@ public class Parser {
     }
 
     Expression parse() {
-        return expression();
+        try {
+            return expression();
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
     private Expression expression() {
@@ -100,11 +105,10 @@ public class Parser {
             if (consumeIfAnyMatches(RIGHT_PAREN)) {
                 return new Grouping(left);
             }
-            // TODO: add error about missing ')' after expression
-            throw new IllegalStateException("missing ')' after expression");
+            throw panic("missing ')' after expression");
         }
 
-        return null;
+        throw panic("expression expected");
     }
 
     private Token consume() {
@@ -138,5 +142,26 @@ public class Parser {
 
     private boolean isAtEnd() {
         return peek().type() == EOF;
+    }
+
+    private ParseException panic(String message) {
+        error(peek(), message);
+        return new ParseException();
+    }
+
+    private void synchronize() {
+        consume();
+
+        while (!isAtEnd()) {
+            if (previous().type() == SEMICOLON) return;
+
+            switch (peek().type()) {
+                case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN -> {
+                    return;
+                }
+            }
+
+            consume();
+        }
     }
 }

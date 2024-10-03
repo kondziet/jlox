@@ -3,12 +3,17 @@ package pl.kondziet;
 import java.util.Objects;
 
 import static pl.kondziet.Expression.*;
+import static pl.kondziet.Main.runtimeError;
 
 public class Interpreter {
 
     void interpret(Expression expression) {
-        Object evaluate = evaluate(expression);
-        System.out.println(stringify(evaluate));
+        try {
+            Object evaluate = evaluate(expression);
+            System.out.println(stringify(evaluate));
+        } catch (ExecutionException e) {
+            runtimeError(e);
+        }
     }
 
     private Object evaluate(Expression expression) {
@@ -25,7 +30,10 @@ public class Interpreter {
         Object right = evaluate(binary.right());
 
         return switch (binary.operator().type()) {
-            case MINUS -> (double) left - (double) right;
+            case MINUS -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left - (double) right;
+            }
             case PLUS -> {
                 if (left instanceof Double l && right instanceof Double r) {
                     yield l + r;
@@ -33,21 +41,38 @@ public class Interpreter {
                 if (left instanceof String l && right instanceof String r) {
                     yield l + r;
                 }
-                // TODO: operands must be two numbers or two strings
-                throw new IllegalStateException("Unexpected value: " + binary.operator().type());
+                throw new ExecutionException(binary.operator(), "operands must be two numbers or two strings");
             }
-            case SLASH -> (double) left / (double) right;
-            case STAR -> (double) left * (double) right;
+            case SLASH -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left / (double) right;
+            }
+            case STAR -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left * (double) right;
+            }
 
-            case GREATER -> (double) left > (double) right;
-            case GREATER_EQUAL -> (double) left >= (double) right;
-            case LESS -> (double) left < (double) right;
-            case LESS_EQUAL -> (double) left <= (double) right;
+            case GREATER -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left > (double) right;
+            }
+            case GREATER_EQUAL -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left >= (double) right;
+            }
+            case LESS -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left < (double) right;
+            }
+            case LESS_EQUAL -> {
+                checkNumberOperands(binary.operator(), left, right);
+                yield (double) left <= (double) right;
+            }
 
             case BANG_EQUAL -> !Objects.equals(left, right);
             case EQUAL_EQUAL -> Objects.equals(left, right);
 
-            default -> throw new IllegalStateException("Unexpected value: " + binary.operator().type());
+            default -> throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
         };
     }
 
@@ -55,10 +80,13 @@ public class Interpreter {
         Object right = evaluate(unary.right());
 
         return switch (unary.operator().type()) {
-            case MINUS -> -(double) right;
+            case MINUS -> {
+                checkNumberOperand(unary.operator(), right);
+                yield -(double) right;
+            }
             case BANG -> !isTruthy(right);
 
-            default -> throw new IllegalStateException("Unexpected value: " + unary.operator().type());
+            default -> throw new ExecutionException(unary.operator(), "unexpected operator in unary expression");
         };
     }
 
@@ -85,5 +113,16 @@ public class Interpreter {
         }
 
         return object.toString();
+    }
+
+    // TODO: find a way to not use this method in each switch case
+    private void checkNumberOperand(Token operator, Object operand) {
+        if (operand instanceof Double) return;
+        throw new ExecutionException(operator, "operand must be number");
+    }
+
+    private void checkNumberOperands(Token operator, Object left, Object right) {
+        if (left instanceof Double && right instanceof Double) return;
+        throw new ExecutionException(operator, "operands must be numbers");
     }
 }

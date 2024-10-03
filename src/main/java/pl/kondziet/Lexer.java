@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import static pl.kondziet.TokenType.*;
+import static pl.kondziet.Main.error;
 
 public class Lexer {
 
@@ -85,9 +86,8 @@ public class Lexer {
 
             case char d when isDigit(d) -> number();
             case char a when isAlpha(a) -> identifier();
-            default -> {
-                // TODO: add error about unexpected character
-            }
+
+            default -> error(line, "unexpected character");
         }
     }
 
@@ -147,7 +147,10 @@ public class Lexer {
             consume();
         }
 
-        // TODO: add error about unterminated string
+        if (isAtEnd()) {
+            error(line, "unterminated string");
+            return;
+        }
 
         consume();
 
