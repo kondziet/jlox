@@ -147,7 +147,10 @@ public class Lexer {
             consume();
         }
 
-        error(line, "unterminated string");
+        if (isAtEnd()) {
+            error(line, "unterminated string");
+            return;
+        }
 
         consume();
 
