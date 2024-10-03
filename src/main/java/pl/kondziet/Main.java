@@ -47,6 +47,9 @@ public class Main {
 
         Parser parser = new Parser(tokens);
         Expression expression = parser.parse();
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.interpret(expression);
     }
 
     static void error(int line, String message) {
