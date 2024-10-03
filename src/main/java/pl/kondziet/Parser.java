@@ -1,8 +1,10 @@
 package pl.kondziet;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static pl.kondziet.Expression.*;
+import static pl.kondziet.Expr.*;
+import static pl.kondziet.Stmt.*;
 import static pl.kondziet.TokenType.*;
 import static pl.kondziet.Main.error;
 
@@ -15,24 +17,50 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expression parse() {
-        try {
-            return expression();
-        } catch (ParseException e) {
-            return null;
+    List<Stmt> parse() {
+        List<Stmt> stmts = new ArrayList<>();
+        while (!isAtEnd()) {
+            stmts.add(statement());
         }
+
+        return stmts;
     }
 
-    private Expression expression() {
+    private Stmt statement() {
+        if (consumeIfAnyMatches(PRINT)) {
+            return printStatement();
+        }
+
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        if (consumeIfAnyMatches(SEMICOLON)) {
+            return new Print(value);
+        }
+        throw panic("expected ';' after expr");
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        if (consumeIfAnyMatches(SEMICOLON)) {
+            return new Expression(expr);
+        }
+
+        throw panic("expected ';' after expr");
+    }
+
+    private Expr expression() {
         return equality();
     }
 
-    private Expression equality() {
-        Expression left = comparison();
+    private Expr equality() {
+        Expr left = comparison();
 
         while (consumeIfAnyMatches(BANG_EQUAL, EQUAL_EQUAL)) {
             Token operator = previous();
-            Expression right = comparison();
+            Expr right = comparison();
 
             left = new Binary(left, operator, right);
         }
@@ -40,12 +68,12 @@ public class Parser {
         return left;
     }
 
-    private Expression comparison() {
-        Expression left = term();
+    private Expr comparison() {
+        Expr left = term();
 
         while (consumeIfAnyMatches(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
             Token operator = previous();
-            Expression right = term();
+            Expr right = term();
 
             left = new Binary(left, operator, right);
         }
@@ -53,12 +81,12 @@ public class Parser {
         return left;
     }
 
-    private Expression term() {
-        Expression left = factor();
+    private Expr term() {
+        Expr left = factor();
 
         while (consumeIfAnyMatches(MINUS, PLUS)) {
             Token operator = previous();
-            Expression right = factor();
+            Expr right = factor();
 
             left = new Binary(left, operator, right);
         }
@@ -66,12 +94,12 @@ public class Parser {
         return left;
     }
 
-    private Expression factor() {
-        Expression left = unary();
+    private Expr factor() {
+        Expr left = unary();
 
         while (consumeIfAnyMatches(SLASH, STAR)) {
             Token operator = previous();
-            Expression right = unary();
+            Expr right = unary();
 
             left = new Binary(left, operator, right);
         }
@@ -79,7 +107,7 @@ public class Parser {
         return left;
     }
 
-    private Expression unary() {
+    private Expr unary() {
         if (consumeIfAnyMatches(BANG, MINUS)) {
             return new Unary(previous(), unary());
         }
@@ -87,7 +115,7 @@ public class Parser {
         return primary();
     }
 
-    private Expression primary() {
+    private Expr primary() {
         if (consumeIfAnyMatches(FALSE)) {
             return new Literal(false);
         }
@@ -101,10 +129,11 @@ public class Parser {
             return new Literal(previous().literal());
         }
         if (consumeIfAnyMatches(LEFT_PAREN)) {
-            Expression left = expression();
+            Expr left = expression();
             if (consumeIfAnyMatches(RIGHT_PAREN)) {
                 return new Grouping(left);
             }
+
             throw panic("missing ')' after expression");
         }
 
