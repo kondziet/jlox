@@ -1,25 +1,44 @@
 package pl.kondziet;
 
+import java.util.List;
 import java.util.Objects;
 
-import static pl.kondziet.Expression.*;
+import static pl.kondziet.Expr.*;
+import static pl.kondziet.Stmt.*;
 import static pl.kondziet.Main.runtimeError;
 
 public class Interpreter {
 
-    void interpret(Expression expression) {
+    void interpret(List<Stmt> statements) {
         try {
-            Object evaluate = evaluate(expression);
-            System.out.println(stringify(evaluate));
+            for (Stmt stmt : statements) {
+                execute(stmt);
+            }
         } catch (ExecutionException e) {
             runtimeError(e);
         }
     }
 
-    private Object evaluate(Expression expression) {
-        return switch (expression) {
+    private void execute(Stmt stmt) {
+        switch (stmt) {
+            case Expression e -> executeExpression(e);
+            case Print p -> executePrint(p);
+        }
+    }
+
+    private void executePrint(Print print) {
+        Object value = evaluate(print.expr());
+        System.out.println(stringify(value));
+    }
+
+    private void executeExpression(Expression expression) {
+        evaluate(expression.expr());
+    }
+
+    private Object evaluate(Expr expr) {
+        return switch (expr) {
             case Binary b -> evaluateBinary(b);
-            case Grouping g -> evaluate(g.expression());
+            case Grouping g -> evaluate(g.expr());
             case Literal l -> l.value();
             case Unary u -> evaluateUnary(u);
         };
