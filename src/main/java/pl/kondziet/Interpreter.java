@@ -3,7 +3,6 @@ package pl.kondziet;
 import java.util.Objects;
 
 import static pl.kondziet.Expression.*;
-import static pl.kondziet.Main.runtimeError;
 
 public class Interpreter {
 
@@ -12,7 +11,7 @@ public class Interpreter {
             Object evaluate = evaluate(expression);
             System.out.println(stringify(evaluate));
         } catch (ExecutionException e) {
-            runtimeError(e);
+            Lox.runtimeError(e);
         }
     }
 

@@ -4,7 +4,6 @@ import java.util.List;
 
 import static pl.kondziet.Expression.*;
 import static pl.kondziet.TokenType.*;
-import static pl.kondziet.Main.error;
 
 public class Parser {
 
@@ -105,10 +104,10 @@ public class Parser {
             if (consumeIfAnyMatches(RIGHT_PAREN)) {
                 return new Grouping(left);
             }
-            throw panic("missing ')' after expression");
+            throw error(peek(), "missing ')' after expression");
         }
 
-        throw panic("expression expected");
+        throw error(peek(), "expression expected");
     }
 
     private Token consume() {
@@ -144,8 +143,8 @@ public class Parser {
         return peek().type() == EOF;
     }
 
-    private ParseException panic(String message) {
-        error(peek(), message);
+    private ParseException error(Token token, String message) {
+        Lox.error(token, message);
         return new ParseException();
     }
 

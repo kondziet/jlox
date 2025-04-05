@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class Lox {
 
     private static final Interpreter interpreter = new Interpreter();
     private static boolean hadError = false;
