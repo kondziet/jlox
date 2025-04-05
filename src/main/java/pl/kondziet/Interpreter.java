@@ -79,9 +79,10 @@ public class Interpreter {
         if (object == null) {
             return false;
         }
-        if (object instanceof Boolean b) {
+        if (object instanceof boolean b) {
             return b;
         }
+
         return true;
     }
 
