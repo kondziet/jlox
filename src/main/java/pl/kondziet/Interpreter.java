@@ -29,51 +29,34 @@ public class Interpreter {
         Object left = evaluate(binary.left());
         Object right = evaluate(binary.right());
 
-        return switch (binary.operator().type()) {
-            case MINUS -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left - (double) right;
-            }
-            case PLUS -> {
-                if (left instanceof Double l && right instanceof Double r) {
-                    yield l + r;
-                }
-                if (left instanceof String l && right instanceof String r) {
-                    yield l + r;
-                }
-                throw new ExecutionException(binary.operator(), "operands must be two numbers or two strings");
-            }
-            case SLASH -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left / (double) right;
-            }
-            case STAR -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left * (double) right;
-            }
+        if (left instanceof double l && right instanceof double r) {
+            return switch (binary.operator().type()) {
+                case MINUS -> l - r;
+                case PLUS -> l + r;
 
-            case GREATER -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left > (double) right;
-            }
-            case GREATER_EQUAL -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left >= (double) right;
-            }
-            case LESS -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left < (double) right;
-            }
-            case LESS_EQUAL -> {
-                checkNumberOperands(binary.operator(), left, right);
-                yield (double) left <= (double) right;
-            }
+                case SLASH -> l / r;
+                case STAR -> l * r;
 
-            case BANG_EQUAL -> !Objects.equals(left, right);
-            case EQUAL_EQUAL -> Objects.equals(left, right);
+                case GREATER -> l > r;
+                case GREATER_EQUAL -> l >= r;
+                case LESS -> l < r;
+                case LESS_EQUAL -> l <= r;
 
-            default -> throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
-        };
+                case EQUAL -> Objects.equals(l, r);
+                case BANG_EQUAL -> !Objects.equals(l, r);
+
+                default -> throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
+            };
+        }
+
+        if (left instanceof String l && right instanceof String r) {
+            if (binary.operator().type() == TokenType.PLUS) {
+                return l + r;
+            }
+            throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
+        }
+
+        throw new ExecutionException(binary.operator(), "operands must be two numbers or two strings");
     }
 
     private Object evaluateUnary(Unary unary) {
@@ -81,8 +64,10 @@ public class Interpreter {
 
         return switch (unary.operator().type()) {
             case MINUS -> {
-                checkNumberOperand(unary.operator(), right);
-                yield -(double) right;
+                if (right instanceof double r) {
+                    yield -r;
+                }
+                throw new ExecutionException(unary.operator(), "Operand must be a number.");
             }
             case BANG -> !isTruthy(right);
 
@@ -113,16 +98,5 @@ public class Interpreter {
         }
 
         return object.toString();
-    }
-
-    // TODO: find a way to not use this method in each switch case
-    private void checkNumberOperand(Token operator, Object operand) {
-        if (operand instanceof Double) return;
-        throw new ExecutionException(operator, "operand must be number");
-    }
-
-    private void checkNumberOperands(Token operator, Object left, Object right) {
-        if (left instanceof Double && right instanceof Double) return;
-        throw new ExecutionException(operator, "operands must be numbers");
     }
 }
