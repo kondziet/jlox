@@ -61,10 +61,14 @@ public class Interpreter {
         }
 
         if (left instanceof String l && right instanceof String r) {
-            if (binary.operator().type() == TokenType.PLUS) {
-                return l + r;
-            }
-            throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
+            return switch (binary.operator().type()) {
+                case PLUS -> l + r;
+
+                case EQUAL_EQUAL -> Objects.equals(l, r);
+                case BANG_EQUAL -> !Objects.equals(l, r);
+
+                default -> throw new ExecutionException(binary.operator(), "unexpected operator in binary expression");
+            };
         }
 
         throw new ExecutionException(binary.operator(), "operands must be two numbers or two strings");
