@@ -1,8 +1,10 @@
 package pl.kondziet;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static pl.kondziet.Expression.*;
+import static pl.kondziet.Statement.*;
 import static pl.kondziet.TokenType.*;
 
 public class Parser {
@@ -14,12 +16,35 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expression parse() {
-        try {
-            return expression();
-        } catch (ParseException e) {
-            return null;
+    List<Statement> parse() {
+        List<Statement> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(statement());
         }
+        return statements;
+    }
+
+    private Statement statement() {
+        if (consumeIfAnyMatches(PRINT)) {
+            return printStatement();
+        }
+        return expressionStatement();
+    }
+
+    private Statement printStatement() {
+        Expression expression = expression();
+        if (consumeIfAnyMatches(SEMICOLON)) {
+            return new Print(expression);
+        }
+        throw error(peek(),  "Expect ';' after value.");
+    }
+
+    private Statement expressionStatement() {
+        Expression expression = expression();
+        if (consumeIfAnyMatches(SEMICOLON)) {
+            return new Expr(expression);
+        }
+        throw error(peek(),  "Expect ';' after value.");
     }
 
     private Expression expression() {

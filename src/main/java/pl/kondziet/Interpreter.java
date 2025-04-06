@@ -1,17 +1,29 @@
 package pl.kondziet;
 
+import java.util.List;
 import java.util.Objects;
 
 import static pl.kondziet.Expression.*;
+import static pl.kondziet.Statement.*;
+
 
 public class Interpreter {
 
-    void interpret(Expression expression) {
+    void interpret(List<Statement> statements) {
         try {
-            Object evaluate = evaluate(expression);
-            System.out.println(stringify(evaluate));
+            statements.forEach(this::execute);
         } catch (ExecutionException e) {
             Lox.runtimeError(e);
+        }
+    }
+
+    private void execute(Statement statement) {
+        switch (statement) {
+            case Expr e -> evaluate(e.expression());
+            case Print p -> {
+                Object value = evaluate(p.expression());
+                System.out.println(stringify(value));
+            }
         }
     }
 
